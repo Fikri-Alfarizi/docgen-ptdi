@@ -412,12 +412,15 @@ class AdminController extends Controller
             $bulanLaluData[] = $bulanLaluResults[$i] ?? 0;
         }
 
-        // 4. Tahun Ini - Optimized to 1 Query
+        // 4. Tahun Ini - Database Agnostic Grouping
         $tahunIniResults = Document::whereYear('created_at', $now->year)
-            ->selectRaw('MONTH(created_at) as month, count(*) as total')
-            ->groupBy('month')
             ->get()
-            ->pluck('total', 'month')
+            ->groupBy(function ($doc) {
+                return (int) $doc->created_at->format('n');
+            })
+            ->map(function ($group) {
+                return $group->count();
+            })
             ->toArray();
 
         $tahunIniLabels = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];

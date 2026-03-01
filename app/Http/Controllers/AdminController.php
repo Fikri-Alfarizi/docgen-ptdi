@@ -351,12 +351,15 @@ class AdminController extends Controller
         $now = \Carbon\Carbon::now();
         $startOfWeek = \Carbon\Carbon::now()->subDays(6)->startOfDay();
 
-        // 1. Minggu Ini (7 Hari Terakhir) - Optimized to 1 Query
+        // 1. Minggu Ini (7 Hari Terakhir) - Database Agnostic Grouping
         $mingguResults = Document::where('created_at', '>=', $startOfWeek)
-            ->selectRaw('DATE(created_at) as date, count(*) as total')
-            ->groupBy('date')
             ->get()
-            ->pluck('total', 'date')
+            ->groupBy(function ($doc) {
+                return $doc->created_at->format('Y-m-d');
+            })
+            ->map(function ($group) {
+                return $group->count();
+            })
             ->toArray();
 
         $mingguLabels = [];
@@ -370,13 +373,16 @@ class AdminController extends Controller
             $mingguData[] = $mingguResults[$dateStr] ?? 0;
         }
 
-        // 2. Bulan Ini - Optimized to 1 Query
+        // 2. Bulan Ini - Database Agnostic Grouping
         $bulanIniResults = Document::whereYear('created_at', $now->year)
             ->whereMonth('created_at', $now->month)
-            ->selectRaw('DAY(created_at) as day, count(*) as total')
-            ->groupBy('day')
             ->get()
-            ->pluck('total', 'day')
+            ->groupBy(function ($doc) {
+                return (int) $doc->created_at->format('j');
+            })
+            ->map(function ($group) {
+                return $group->count();
+            })
             ->toArray();
 
         $bulanIniLabels = [];
@@ -386,14 +392,17 @@ class AdminController extends Controller
             $bulanIniData[] = $bulanIniResults[$i] ?? 0;
         }
 
-        // 3. Bulan Lalu - Optimized to 1 Query
+        // 3. Bulan Lalu - Database Agnostic Grouping
         $lastMonth = \Carbon\Carbon::now()->subMonth();
         $bulanLaluResults = Document::whereYear('created_at', $lastMonth->year)
             ->whereMonth('created_at', $lastMonth->month)
-            ->selectRaw('DAY(created_at) as day, count(*) as total')
-            ->groupBy('day')
             ->get()
-            ->pluck('total', 'day')
+            ->groupBy(function ($doc) {
+                return (int) $doc->created_at->format('j');
+            })
+            ->map(function ($group) {
+                return $group->count();
+            })
             ->toArray();
 
         $bulanLaluLabels = [];

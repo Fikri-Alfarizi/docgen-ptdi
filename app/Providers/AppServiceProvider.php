@@ -22,9 +22,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (Schema::hasTable('system_settings')) {
-            $settings = SystemSetting::all()->pluck('value', 'key')->toArray();
-            View::share('site_settings', $settings);
+        try {
+            if (Schema::hasTable('system_settings')) {
+                $settings = SystemSetting::all()->pluck('value', 'key')->toArray();
+                View::share('site_settings', $settings);
+            }
+        } catch (\Exception $e) {
+            View::share('site_settings', []);
         }
     }
 }

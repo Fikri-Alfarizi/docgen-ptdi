@@ -15,21 +15,25 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         // Akun Administrator
-        User::create([
-            'name' => 'Administrator PT DI',
-            'email' => 'admin@ptdi.co.id',
-            'password' => Hash::make('password123'),
-            'nik' => '0000000000000000',
-            'role' => 'admin',
-        ]);
+        User::updateOrCreate(
+            ['email' => 'admin@ptdi.co.id'],
+            [
+                'name' => 'Administrator PT DI',
+                'password' => Hash::make('password123'),
+                'nik' => '0000000000000000',
+                'role' => 'admin',
+            ]
+        );
 
         // Akun Karyawan/User Biasa
-        User::create([
-            'name' => 'Budi Santoso',
-            'email' => 'budi@karyawan.ptdi',
-            'password' => Hash::make('password123'),
-            'nik' => '3201234567890001',
-            'role' => 'user',
-        ]);
+        User::updateOrCreate(
+            ['email' => 'budi@karyawan.ptdi'],
+            [
+                'name' => 'Budi Santoso',
+                'password' => Hash::make('password123'),
+                'nik' => '3201234567890001',
+                'role' => 'user',
+            ]
+        );
     }
 }

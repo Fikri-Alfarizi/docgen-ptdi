@@ -53,6 +53,8 @@ class SystemSettingsController extends Controller
             SystemSetting::updateOrCreate(['key' => 'app_favicon'], ['value' => $faviconName]);
         }
 
+        SystemSetting::flushCache();
+
         return redirect()->back()->with('success', 'Pengaturan sistem berhasil diperbarui.');
     }
     public function ajaxToggleVisibility(Request $request)
@@ -64,6 +66,8 @@ class SystemSettingsController extends Controller
             ['key' => 'admin_settings_visible'],
             ['value' => $newValue]
         );
+
+        SystemSetting::flushCache();
 
         return response()->json([
             'success' => true,

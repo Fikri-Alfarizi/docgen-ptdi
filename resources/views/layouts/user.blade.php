@@ -217,6 +217,50 @@
                 margin-left: 0;
             }
         }
+
+        /* Drag & Drop Overlay */
+        #global-drag-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.85);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+            transition: all 0.2s ease;
+        }
+
+        #global-drag-overlay.d-none {
+            display: none !important;
+        }
+
+        .overlay-content {
+            text-align: center;
+            border: 3px dashed rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            padding: 50px 100px;
+            pointer-events: none;
+            animation: pulse-border 2s infinite;
+        }
+
+        @keyframes pulse-border {
+            0% {
+                border-color: rgba(255, 255, 255, 0.5);
+            }
+
+            50% {
+                border-color: rgba(255, 255, 255, 1);
+                transform: scale(1.02);
+            }
+
+            100% {
+                border-color: rgba(255, 255, 255, 0.5);
+            }
+        }
     </style>
     @stack('styles')
 </head>
@@ -242,14 +286,21 @@
                 <a href="{{ route('user.dashboard') }}"
                     class="nav-link {{ request()->routeIs('user.dashboard') ? 'active' : '' }}">
                     <i class="mdi mdi-view-dashboard-outline"></i>
-                    <span>Tersedia</span>
+                    <span>Dashboard</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('user.documents.upload') }}"
+                    class="nav-link {{ request()->routeIs('user.documents.upload') ? 'active' : '' }}">
+                    <i class="mdi mdi-upload"></i>
+                    <span>Upload Dokumen</span>
                 </a>
             </li>
             <li class="nav-item">
                 <a href="{{ route('user.documents') }}"
                     class="nav-link {{ request()->routeIs('user.documents') ? 'active' : '' }}">
-                    <i class="mdi mdi-history"></i>
-                    <span>Riwayat Saya</span>
+                    <i class="mdi mdi-file-document-outline"></i>
+                    <span>Dokumen</span>
                 </a>
             </li>
 
@@ -342,9 +393,131 @@
         <i class="mdi mdi-menu fs-4"></i>
     </button>
 
+    <!-- Global Drag & Drop Overlay -->
+    <div id="global-drag-overlay" class="d-none">
+        <div class="overlay-content">
+            <i class="mdi mdi-cloud-upload" style="font-size: 80px; color: white;"></i>
+            <h2 class="text-white fw-bold mt-3">Drop file di sini untuk Upload</h2>
+            <p class="text-white-50">Dukung PDF, Word, Excel, PowerPoint, ZIP, RAR</p>
+        </div>
+    </div>
+
+    <!-- Global Quick Upload Modal -->
+    <div class="modal fade" id="globalUploadModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-premium">
+                <div class="modal-header" style="background: var(--accent-blue); color: white; border: none;">
+                    <h5 class="modal-title fw-bold">Selesaikan Upload Dokumen</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{{ route('user.documents.store') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-body p-4">
+                        <div class="alert alert-info py-2 small d-flex align-items-center mb-3"
+                            id="globalDroppedFileName" style="border-radius: 8px;">
+                            <i class="mdi mdi-file-check-outline fs-4 me-2 flex-shrink-0"></i>
+                            <div class="w-100 overflow-hidden">
+                                <span class="d-block text-muted" style="font-size: 10px;">File Terpilih</span>
+                                <b class="text-dark d-block text-truncate" style="max-width: 100%;"
+                                    title="">filename.pdf</b>
+                            </div>
+                        </div>
+
+                        <!-- Hidden input to hold the dropped file -->
+                        <input type="file" name="file_dokumen" id="globalFileInput" class="d-none" required>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted">Nama / Judul Dokumen <span
+                                    class="text-danger">*</span></label>
+                            <input type="text" name="nama_dokumen" id="globalFileTitle" class="form-control"
+                                placeholder="Contoh: Laporan Keuangan..." required maxlength="255">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-muted">Organisasi / Departemen (ORG) <span
+                                    class="text-danger">*</span></label>
+                            <select class="form-select form-control" name="org" required>
+                                <option value="">-- Pilih Departemen --</option>
+                                <option value="HR">HR - Human Resource</option>
+                                <option value="UT">UT - Unit Teknik</option>
+                                <option value="SK">SK - Sekretariat</option>
+                                <option value="PTD">PTD - Produksi</option>
+                                <option value="QA">QA - Quality Assurance</option>
+                                <option value="FIN">FIN - Finance</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light px-4 py-3 border-top-0 justify-content-between">
+                        <button type="button" class="btn btn-secondary" style="border-radius: 4px;"
+                            data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn text-white fw-bold"
+                            style="background: var(--accent-blue); border-radius: 4px;">
+                            <i class="mdi mdi-cloud-upload me-1"></i> Upload Sekarang
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Global JS -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Global Drag & Drop Script -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            let dragCounter = 0;
+            const overlay = document.getElementById('global-drag-overlay');
+            const fileInput = document.getElementById('globalFileInput');
+            const fileTitle = document.getElementById('globalFileTitle');
+            const fileNameDisplay = document.getElementById('globalDroppedFileName').querySelector('b');
+
+            window.addEventListener('dragenter', function (e) {
+                e.preventDefault();
+                dragCounter++;
+                overlay.classList.remove('d-none');
+            });
+
+            window.addEventListener('dragleave', function (e) {
+                e.preventDefault();
+                dragCounter--;
+                if (dragCounter === 0) {
+                    overlay.classList.add('d-none');
+                }
+            });
+
+            window.addEventListener('dragover', function (e) {
+                e.preventDefault();
+            });
+
+            window.addEventListener('drop', function (e) {
+                e.preventDefault();
+                dragCounter = 0;
+                overlay.classList.add('d-none');
+
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    const file = e.dataTransfer.files[0];
+
+                    // Convert files to DataTransfer to set into input
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+                    fileInput.files = dataTransfer.files;
+
+                    // Update UI text
+                    fileNameDisplay.textContent = file.name;
+                    fileNameDisplay.title = file.name; // Add title for hover text
+
+                    // Auto-fill title without extension and limit to 255 chars
+                    let title = file.name.split('.').slice(0, -1).join('.');
+                    fileTitle.value = (title || file.name).substring(0, 255);
+
+                    // Show Modal
+                    const uploadModal = new bootstrap.Modal(document.getElementById('globalUploadModal'));
+                    uploadModal.show();
+                }
+            });
+        });
+    </script>
 
     @stack('modals')
     @stack('scripts')

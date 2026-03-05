@@ -9,6 +9,62 @@ use Illuminate\Support\Facades\Auth;
 
 class DocumentController extends Controller
 {
+    public function storeUpload(Request $request)
+    {
+        $request->validate([
+            'nama_dokumen' => 'required|string|max:255',
+            'org' => 'required|string|max:10',
+            'file_dokumen' => 'required|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,zip,rar|max:30480'
+        ]);
+
+        $file = $request->file('file_dokumen');
+        $filename = uniqid() . '_' . preg_replace('/[^A-Za-z0-9.\-]/', '_', $file->getClientOriginalName());
+        $path = $file->storeAs('documents', $filename, 'public');
+
+        Document::create([
+            'user_id' => Auth::id(),
+            'jenis_dokumen' => $request->nama_dokumen,
+            'org' => $request->org,
+            'file_path' => $path
+        ]);
+
+        return redirect()->route('user.documents')->with('success', 'Dokumen berhasil diunggah.');
+    }
+
+    public function updateUpload(Request $request, $id)
+    {
+        $document = Document::findOrFail($id);
+
+        if ($document->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $request->validate([
+            'nama_dokumen' => 'required|string|max:255',
+            'org' => 'required|string|max:10',
+            'file_dokumen' => 'nullable|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,zip,rar|max:30480'
+        ]);
+
+        $document->jenis_dokumen = $request->nama_dokumen;
+        $document->org = $request->org;
+
+        if ($request->hasFile('file_dokumen')) {
+            $file = $request->file('file_dokumen');
+            $filename = uniqid() . '_' . preg_replace('/[^A-Za-z0-9.\-]/', '_', $file->getClientOriginalName());
+            $path = $file->storeAs('documents', $filename, 'public');
+
+            // Optionally delete old file here if needed:
+            // Storage::disk('public')->delete($document->file_path);
+
+            $document->file_path = $path;
+            $document->rev = $document->rev + 1; // Increment revision only when file is changed
+        }
+
+        $document->save();
+
+        return redirect()->route('user.documents')->with('success', 'Dokumen berhasil diupdate.');
+    }
+
     public function generate(Request $request)
     {
         $request->validate([
@@ -51,6 +107,7 @@ class DocumentController extends Controller
             Document::create([
                 'user_id' => Auth::id(),
                 'jenis_dokumen' => $template->nama_template,
+                'org' => $template->org,
                 'file_path' => 'documents/' . $fileName
             ]);
 

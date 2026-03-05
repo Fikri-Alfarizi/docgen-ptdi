@@ -72,6 +72,8 @@
                         </form>
 
                         <div class="mt-4 text-muted small">
+                            Belum punya akun? <a href="{{ route('register') }}"
+                                class="fw-bold text-decoration-none">Daftar di sini</a><br>
                             &copy; {{ date('Y') }} PT Dirgantara Indonesia. All rights reserved.
                         </div>
                     </div>

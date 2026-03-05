@@ -9,6 +9,8 @@ class Document extends Model
     protected $fillable = [
         'user_id',
         'jenis_dokumen',
+        'org',
+        'rev',
         'file_path',
     ];
 

@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\UserController;
@@ -8,11 +9,18 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\SystemSettingsController;
 
 Route::get('/', function () {
+    if (Auth::check()) {
+        return Auth::user()->role === 'admin'
+            ? redirect('/admin/dashboard')
+            : redirect('/user/dashboard');
+    }
     return redirect('/login');
 });
 
-Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
+Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login')->middleware('guest');
+Route::post('/login', [AuthController::class, 'login'])->middleware('guest');
+Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register')->middleware('guest');
+Route::post('/register', [AuthController::class, 'register'])->middleware('guest');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Shared Dashboard Route (Public but Private by Hash)
@@ -25,7 +33,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/search', [AdminController::class, 'globalSearch'])->name('search');
 
     Route::get('/users', [AdminController::class, 'manageUsers'])->name('users');
-    Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
     Route::put('/users/{id}', [AdminController::class, 'updateUser'])->name('users.update');
     Route::delete('/users/{id}', [AdminController::class, 'destroyUser'])->name('users.destroy');
 
@@ -46,6 +53,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 Route::middleware(['auth', 'role:user'])->prefix('user')->name('user.')->group(function () {
     Route::get('/dashboard', [UserController::class, 'dashboard'])->name('dashboard');
     Route::get('/documents', [UserController::class, 'myDocuments'])->name('documents');
+    Route::get('/documents/upload', [UserController::class, 'upload'])->name('documents.upload');
+    Route::post('/documents', [DocumentController::class, 'storeUpload'])->name('documents.store');
+    Route::post('/documents/{id}/update', [DocumentController::class, 'updateUpload'])->name('documents.update');
     Route::post('/documents/generate', [DocumentController::class, 'generate'])->name('documents.generate');
 });
 

@@ -36,7 +36,7 @@ class AdminController extends Controller
 
     public function manageUsers()
     {
-        $users = User::all();
+        $users = User::select('id', 'name', 'email', 'nik', 'role', 'created_at')->get();
         return view('admin.users.index', compact('users'));
     }
 
@@ -104,7 +104,7 @@ class AdminController extends Controller
 
     public function manageTemplates()
     {
-        $templates = Template::all();
+        $templates = Template::select('id', 'nama_template', 'nomor', 'org', 'rev', 'file_path', 'created_at')->get();
         return view('admin.templates.index', compact('templates'));
     }
 
@@ -188,7 +188,7 @@ class AdminController extends Controller
 
     public function historyDocuments()
     {
-        $documents = Document::with('user')->latest()->get();
+        $documents = Document::with('user:id,name,nik')->select('id', 'user_id', 'jenis_dokumen', 'org', 'rev', 'file_path', 'created_at')->latest()->get();
         return view('admin.documents.history', compact('documents'));
     }
 
@@ -205,9 +205,16 @@ class AdminController extends Controller
         return back()->with('success', 'Catatan log cetak dan file fisik dokumen terkait berhasil dihapus!');
     }
 
-    public function exportDocumentsPdf()
+    public function exportDocumentsPdf(Request $request)
     {
-        $documents = Document::with('user')->latest()->get();
+        $limit = $request->input('limit', 'all');
+        $query = Document::with('user')->latest();
+
+        if ($limit !== 'all' && is_numeric($limit)) {
+            $query->limit((int) $limit);
+        }
+
+        $documents = $query->get();
 
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.documents.pdf', compact('documents'));
         $pdf->setPaper('A4', 'landscape');
@@ -351,15 +358,12 @@ class AdminController extends Controller
         $now = \Carbon\Carbon::now();
         $startOfWeek = \Carbon\Carbon::now()->subDays(6)->startOfDay();
 
-        // 1. Minggu Ini (7 Hari Terakhir) - Database Agnostic Grouping
+        // 1. Minggu Ini (7 Hari Terakhir) - Optimized to 1 Query
         $mingguResults = Document::where('created_at', '>=', $startOfWeek)
+            ->selectRaw('DATE(created_at) as date, count(*) as total')
+            ->groupBy('date')
             ->get()
-            ->groupBy(function ($doc) {
-                return $doc->created_at->format('Y-m-d');
-            })
-            ->map(function ($group) {
-                return $group->count();
-            })
+            ->pluck('total', 'date')
             ->toArray();
 
         $mingguLabels = [];
@@ -373,16 +377,13 @@ class AdminController extends Controller
             $mingguData[] = $mingguResults[$dateStr] ?? 0;
         }
 
-        // 2. Bulan Ini - Database Agnostic Grouping
+        // 2. Bulan Ini - Optimized to 1 Query
         $bulanIniResults = Document::whereYear('created_at', $now->year)
             ->whereMonth('created_at', $now->month)
+            ->selectRaw('DAY(created_at) as day, count(*) as total')
+            ->groupBy('day')
             ->get()
-            ->groupBy(function ($doc) {
-                return (int) $doc->created_at->format('j');
-            })
-            ->map(function ($group) {
-                return $group->count();
-            })
+            ->pluck('total', 'day')
             ->toArray();
 
         $bulanIniLabels = [];
@@ -392,17 +393,14 @@ class AdminController extends Controller
             $bulanIniData[] = $bulanIniResults[$i] ?? 0;
         }
 
-        // 3. Bulan Lalu - Database Agnostic Grouping
+        // 3. Bulan Lalu - Optimized to 1 Query
         $lastMonth = \Carbon\Carbon::now()->subMonth();
         $bulanLaluResults = Document::whereYear('created_at', $lastMonth->year)
             ->whereMonth('created_at', $lastMonth->month)
+            ->selectRaw('DAY(created_at) as day, count(*) as total')
+            ->groupBy('day')
             ->get()
-            ->groupBy(function ($doc) {
-                return (int) $doc->created_at->format('j');
-            })
-            ->map(function ($group) {
-                return $group->count();
-            })
+            ->pluck('total', 'day')
             ->toArray();
 
         $bulanLaluLabels = [];
@@ -412,15 +410,12 @@ class AdminController extends Controller
             $bulanLaluData[] = $bulanLaluResults[$i] ?? 0;
         }
 
-        // 4. Tahun Ini - Database Agnostic Grouping
+        // 4. Tahun Ini - Optimized to 1 Query
         $tahunIniResults = Document::whereYear('created_at', $now->year)
+            ->selectRaw('MONTH(created_at) as month, count(*) as total')
+            ->groupBy('month')
             ->get()
-            ->groupBy(function ($doc) {
-                return (int) $doc->created_at->format('n');
-            })
-            ->map(function ($group) {
-                return $group->count();
-            })
+            ->pluck('total', 'month')
             ->toArray();
 
         $tahunIniLabels = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];

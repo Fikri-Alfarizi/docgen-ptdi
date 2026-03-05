@@ -9,10 +9,7 @@
                         <h1 class="m-0 fw-bold">Manajemen Karyawan / Pengguna</h1>
                     </div>
                     <div>
-                        <button type="button" class="btn btn-primary btn-lg text-white mb-0 me-0" data-bs-toggle="modal"
-                            data-bs-target="#addUserModal">
-                            <i class="mdi mdi-account-plus"></i> Tambah Akun
-                        </button>
+                        <!-- Tombol Tambah Akun dihilangkan (Registrasi via Register Page) -->
                     </div>
                 </div>
 
@@ -109,49 +106,7 @@
         </div>
     </div>
 
-    <!-- Modal Tambah Akun -->
-    <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <form action="{{ route('admin.users.store') }}" method="POST">
-                    @csrf
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="addUserModalLabel">Tambah Akun Pegawai</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label">Nama Lengkap</label>
-                            <input type="text" class="form-control" name="name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">NIK</label>
-                            <input type="text" class="form-control" name="nik">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" class="form-control" name="email" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Password</label>
-                            <input type="password" class="form-control" name="password" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Role Akses</label>
-                            <select class="form-select" name="role" required>
-                                <option value="user">Pegawai/User</option>
-                                <option value="admin">Administrator</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary text-white">Simpan Data</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+    <!-- Form Tambah Akun Di-disable / Integrasi Registrasi Publik -->
 
     <!-- Modal Edit Akun (Loop) -->
     @foreach($users as $user)

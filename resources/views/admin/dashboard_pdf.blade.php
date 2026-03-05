@@ -60,6 +60,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 20px;
+            table-layout: fixed;
         }
 
         th,
@@ -67,6 +68,8 @@
             border: 1px solid #ddd;
             padding: 10px;
             text-align: left;
+            word-wrap: break-word;
+            word-break: break-all;
         }
 
         th {

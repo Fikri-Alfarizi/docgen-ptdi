@@ -9,10 +9,32 @@
                         <h1 class="m-0 fw-bold">Riwayat Cetak Dokumen (Global)</h1>
                     </div>
                     <div>
-                        <a href="{{ route('admin.documents.export') }}" class="btn btn-outline-dark btn-lg mb-0 me-0"
-                            title="Export Log">
-                            <i class="mdi mdi-download"></i> Unduh Log
-                        </a>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-dark btn-lg mb-0 me-0 dropdown-toggle" type="button"
+                                id="exportDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="mdi mdi-download"></i> Unduh Log
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="exportDropdown">
+                                <li><a class="dropdown-item"
+                                        href="{{ route('admin.documents.export', ['limit' => 10]) }}">Unduh 10 Data
+                                        Terakhir</a></li>
+                                <li><a class="dropdown-item"
+                                        href="{{ route('admin.documents.export', ['limit' => 25]) }}">Unduh 25 Data
+                                        Terakhir</a></li>
+                                <li><a class="dropdown-item"
+                                        href="{{ route('admin.documents.export', ['limit' => 50]) }}">Unduh 50 Data
+                                        Terakhir</a></li>
+                                <li><a class="dropdown-item"
+                                        href="{{ route('admin.documents.export', ['limit' => 100]) }}">Unduh 100 Data
+                                        Terakhir</a></li>
+                                <li>
+                                    <hr class="dropdown-divider">
+                                </li>
+                                <li><a class="dropdown-item text-primary fw-bold"
+                                        href="{{ route('admin.documents.export', ['limit' => 'all']) }}">Unduh Semua
+                                        Data</a></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
 
@@ -20,11 +42,44 @@
                     <div class="col-12 grid-margin stretch-card">
                         <div class="card card-rounded">
                             <div class="card-body">
-                                <div class="d-sm-flex justify-content-between align-items-start">
+                                <div class="d-sm-flex justify-content-between align-items-center mb-3">
                                     <div>
-                                        <h4 class="card-title card-title-dash">Log Aktivitas Generasi Dokumen</h4>
-                                        <p class="card-subtitle card-subtitle-dash">Daftar semua dokumen yang dicetak oleh
-                                            seluruh karyawan</p>
+                                        <h4 class="card-title card-title-dash mb-1">Log Aktivitas Generasi Dokumen</h4>
+                                        <p class="card-subtitle card-subtitle-dash mb-0">Daftar semua dokumen yang dicetak
+                                            oleh seluruh karyawan</p>
+                                    </div>
+                                    <div class="d-flex flex-column flex-md-row gap-2 mt-3 mt-sm-0 align-items-md-center">
+                                        <div class="d-flex gap-2">
+                                            <select id="filterFormat"
+                                                class="form-select form-select-sm border-secondary-subtle shadow-sm"
+                                                style="width: 140px; border-radius: 4px;">
+                                                <option value="">Semua Format</option>
+                                                <option value="PDF">PDF</option>
+                                                <option value="DOCX">DOCX</option>
+                                                <option value="XLSX">Excel</option>
+                                                <option value="PPTX">PowerPoint</option>
+                                                <option value="ZIP">ZIP/RAR</option>
+                                            </select>
+                                            <select id="filterOrg"
+                                                class="form-select form-select-sm border-secondary-subtle shadow-sm"
+                                                style="width: 160px; border-radius: 4px;">
+                                                <option value="">Semua Departemen</option>
+                                                <option value="HR">HR - Human Resource</option>
+                                                <option value="UT">UT - Unit Teknik</option>
+                                                <option value="SK">SK - Sekretariat</option>
+                                                <option value="PTD">PTD - Produksi</option>
+                                                <option value="QA">QA - Quality Assurance</option>
+                                                <option value="FIN">FIN - Finance</option>
+                                            </select>
+                                        </div>
+                                        <div class="position-relative">
+                                            <i class="mdi mdi-magnify position-absolute text-muted"
+                                                style="top:50%; transform:translateY(-50%); left:12px; font-size:18px;"></i>
+                                            <input type="text" id="searchDoc"
+                                                class="form-control form-control-sm ps-5 shadow-sm border-secondary-subtle"
+                                                placeholder="Cari riwayat..."
+                                                style="width: 200px; border-radius: 4px; padding-top: 5px; padding-bottom: 5px;">
+                                        </div>
                                     </div>
                                 </div>
 
@@ -36,6 +91,8 @@
                                                 <th>Nama Karyawan</th>
                                                 <th>NIK Karyawan</th>
                                                 <th>File - Nama Dokumen</th>
+                                                <th>ORG</th>
+                                                <th>Rev</th>
                                                 <th>Waktu (Timestamp)</th>
                                                 <th>Aksi File</th>
                                             </tr>
@@ -70,11 +127,21 @@
                                                                 $textClass = 'text-warning';
                                                             }
                                                         @endphp
-                                                        <div class="d-flex align-items-center">
-                                                            <i class="mdi {{ $iconClass }} {{ $textClass }} me-2"
+                                                        <div class="d-flex align-items-center overflow-hidden"
+                                                            style="max-width: 250px;">
+                                                            <i class="mdi {{ $iconClass }} {{ $textClass }} me-2 flex-shrink-0"
                                                                 style="font-size: 20px;"></i>
+                                                            <span class="fw-bold text-truncate"
+                                                                title="{{ mb_strtoupper($doc->jenis_dokumen) }}">{{ mb_strtoupper($doc->jenis_dokumen) }}</span>
                                                             <span
-                                                                class="fw-bold">{{ mb_strtoupper($doc->jenis_dokumen) }}</span>
+                                                                class="d-none">{{ strtoupper((in_array($extBadge, ['rar', 'zip']) ? 'ZIP' : $extBadge)) }}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="badge badge-opacity-primary">{{ $doc->org ?? '-' }}</div>
+                                                    </td>
+                                                    <td>
+                                                        <div class="badge badge-opacity-warning">Rev: {{ $doc->rev ?? '0' }}
                                                         </div>
                                                     </td>
                                                     <td>{{ $doc->created_at->format('d/m/Y - H:i:s') }}</td>
@@ -117,11 +184,11 @@
                 </div>
 
                 <div class="alert alert-warning border-0 shadow-sm mt-3" role="alert">
-                    <h5 class="fw-bold"><i class="mdi mdi-alert-circle-outline"></i> Peringatan Audit!</h5>
-                    Di sini Anda berkuasa melihat **seluruh kegiatan pencetakan** oleh seluruh karyawan PT DI. Jika seorang
-                    Karyawan
-                    dihapus dari sistem, maka laporan milik mereka di sini akan otomatis hilang sesuai kaidah keamanan <i>ON
-                        DELETE CASCADE</i> yang ada di tabel Database.
+                    <h5 class="fw-bold"><i class="mdi mdi-alert-circle-outline"></i> Catatan Keamanan & Audit</h5>
+                    Halaman ini menampilkan <strong>seluruh riwayat aktivitas pencetakan dokumen</strong> oleh
+                    seluruh karyawan PT Dirgantara Indonesia. Apabila data seorang karyawan dihapus dari sistem,
+                    maka seluruh catatan riwayat dokumen milik karyawan tersebut akan secara otomatis terhapus
+                    sesuai dengan kebijakan integritas data (<i>ON DELETE CASCADE</i>) yang diterapkan pada basis data.
                 </div>
 
             </div>
@@ -181,20 +248,42 @@
                         var isRealData = $table.find('tbody tr td[colspan]').length === 0;
 
                         if (rowCount > 0 && isRealData && !$.fn.DataTable.isDataTable(this)) {
-                            $table.DataTable({
+                            var table = $table.DataTable({
                                 "aLengthMenu": [
                                     [10, 25, 50, -1],
                                     [10, 25, 50, "All"]
                                 ],
                                 "iDisplayLength": 10,
                                 "language": {
-                                    search: ""
+                                    "search": "",
+                                    "zeroRecords": "Tidak ada riwayat yang ditemukan",
+                                    "infoEmpty": "Tidak ada data tersedia",
+                                    "infoFiltered": "(difilter dari _MAX_ total log)"
                                 },
-                                "order": [[4, "desc"]] // Sort by Waktu column by default
+                                "order": [[6, "desc"]], // Sort by Waktu column by default
+                                "dom": '<"d-flex justify-content-between align-items-center mb-2"l>rt<"d-flex justify-content-between align-items-center flex-wrap"ip><"clear">'
                             });
+
+                            // Filter Custom: Format (Kolom index ke-3)
+                            $('#filterFormat').on('change', function () {
+                                let val = $(this).val();
+                                table.column(3).search(val ? val : '', true, false).draw();
+                            });
+
+                            // Filter Custom: Departemen / ORG (Kolom index ke-4)
+                            $('#filterOrg').on('change', function () {
+                                let val = $(this).val();
+                                table.column(4).search(val ? val : '', true, false).draw();
+                            });
+
+                            // Custom search global
+                            $("#searchDoc").on("keyup", function () {
+                                table.search(this.value).draw();
+                            });
+                        } else {
+                            $("#searchDoc, #filterFormat, #filterOrg").prop("disabled", true);
                         }
                     });
-                    $('.dataTables_filter input').attr('placeholder', 'Cari riwayat...');
                 }
             });
         </script>

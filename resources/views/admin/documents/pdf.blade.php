@@ -38,6 +38,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 15px;
+            table-layout: fixed; /* Kunci lebar tabel agar tidak meluber */
         }
 
         table th,
@@ -45,6 +46,8 @@
             border: 1px solid #ddd;
             padding: 8px;
             text-align: left;
+            word-wrap: break-word; /* Paksa teks panjang turun baris */
+            word-break: break-all;
         }
 
         table th {
@@ -83,27 +86,37 @@
         <h1>Sistem Informasi Dokumen - PT Dirgantara Indonesia</h1>
         <p class="subtitle">Laporan Riwayat Cetak Dokumen (Global)</p>
         <p class="subtitle" style="font-size: 10px;">Tanggal Cetak Laporan:
-            {{ \Carbon\Carbon::now()->format('d/m/Y H:i:s') }}</p>
+            {{ \Carbon\Carbon::now()->format('d/m/Y H:i:s') }}
+        </p>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th width="8%" class="text-center">ID Log</th>
-                <th width="25%">Nama Pemohon</th>
-                <th width="15%">NIK Karyawan</th>
-                <th width="30%">Jenis (Template) Dokumen</th>
-                <th width="22%">Waktu Cetak</th>
+                <th width="7%" class="text-center">ID Log</th>
+                <th width="15%">Nama Pemohon</th>
+                <th width="12%">NIK</th>
+                <th width="33%">File - Nama Dokumen</th>
+                <th width="7%" class="text-center">Fmt</th>
+                <th width="8%" class="text-center">Org</th>
+                <th width="5%" class="text-center">Rev</th>
+                <th width="13%">Waktu Cetak</th>
             </tr>
         </thead>
         <tbody>
             @foreach($documents as $doc)
+                @php
+                    $ext = strtoupper(pathinfo($doc->file_path, PATHINFO_EXTENSION));
+                @endphp
                 <tr>
                     <td class="text-center"><span class="badge">#{{ $doc->id }}</span></td>
                     <td>{{ $doc->user->name ?? 'User Terhapus' }}</td>
                     <td>{{ $doc->user->nik ?? '-' }}</td>
-                    <td>{{ $doc->jenis_dokumen }}</td>
-                    <td>{{ $doc->created_at->format('d/m/Y - H:i') }}</td>
+                    <td>{{ mb_strtoupper($doc->jenis_dokumen) }}</td>
+                    <td class="text-center">{{ $ext }}</td>
+                    <td class="text-center">{{ $doc->org ?? '-' }}</td>
+                    <td class="text-center">{{ $doc->rev ?? '0' }}</td>
+                    <td>{{ $doc->created_at->format('d/m/Y H:i') }}</td>
                 </tr>
             @endforeach
         </tbody>

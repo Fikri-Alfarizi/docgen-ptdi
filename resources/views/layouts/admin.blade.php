@@ -167,37 +167,20 @@
                             </a>
                         </li>
 
-                        <li class="nav-item nav-category">MANAJEMEN SISTEM</li>
-                        <li class="nav-item {{ request()->routeIs('admin.templates') ? 'active' : '' }}">
-                            <a class="nav-link" href="{{ route('admin.templates') }}">
-                                <i class="mdi mdi-file-document-box-outline menu-icon"></i>
-                                <span class="menu-title">Template Dokumen</span>
-                            </a>
-                        </li>
+                        <li class="nav-item nav-category">MONITORING</li>
                         <li class="nav-item {{ request()->routeIs('admin.users') ? 'active' : '' }}">
                             <a class="nav-link" href="{{ route('admin.users') }}">
                                 <i class="mdi mdi-account-group-outline menu-icon"></i>
-                                <span class="menu-title">Data Karyawan</span>
+                                <span class="menu-title">Data Pengguna</span>
                             </a>
                         </li>
-
-                        <li class="nav-item nav-category">PELAPORAN</li>
                         <li class="nav-item {{ request()->routeIs('admin.documents.history') ? 'active' : '' }}">
                             <a class="nav-link" href="{{ route('admin.documents.history') }}">
-                                <i class="mdi mdi-history menu-icon"></i>
-                                <span class="menu-title">Riwayat Cetak Global</span>
+                                <i class="mdi mdi-file-document-box-outline menu-icon"></i>
+                                <span class="menu-title">Data Dokumen</span>
                             </a>
                         </li>
 
-                        @if(!empty($site_settings['admin_settings_visible']) && $site_settings['admin_settings_visible'] == '1')
-                            <li class="nav-item nav-category">SISTEM</li>
-                            <li class="nav-item {{ request()->routeIs('admin.settings') ? 'active' : '' }}">
-                                <a class="nav-link" href="{{ route('admin.settings') }}">
-                                    <i class="mdi mdi-settings-outline menu-icon"></i>
-                                    <span class="menu-title">Pengaturan Sistem</span>
-                                </a>
-                            </li>
-                        @endif
                     </ul>
                 </nav>
             @endif

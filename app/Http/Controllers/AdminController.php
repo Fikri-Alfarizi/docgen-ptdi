@@ -380,7 +380,7 @@ class AdminController extends Controller
         // 2. Bulan Ini - Optimized to 1 Query
         $bulanIniResults = Document::whereYear('created_at', $now->year)
             ->whereMonth('created_at', $now->month)
-            ->selectRaw('DAY(created_at) as day, count(*) as total')
+            ->selectRaw('CAST(strftime(\'%d\', created_at) AS INTEGER) as day, count(*) as total')
             ->groupBy('day')
             ->get()
             ->pluck('total', 'day')
@@ -397,7 +397,7 @@ class AdminController extends Controller
         $lastMonth = \Carbon\Carbon::now()->subMonth();
         $bulanLaluResults = Document::whereYear('created_at', $lastMonth->year)
             ->whereMonth('created_at', $lastMonth->month)
-            ->selectRaw('DAY(created_at) as day, count(*) as total')
+            ->selectRaw('CAST(strftime(\'%d\', created_at) AS INTEGER) as day, count(*) as total')
             ->groupBy('day')
             ->get()
             ->pluck('total', 'day')
@@ -412,7 +412,7 @@ class AdminController extends Controller
 
         // 4. Tahun Ini - Optimized to 1 Query
         $tahunIniResults = Document::whereYear('created_at', $now->year)
-            ->selectRaw('MONTH(created_at) as month, count(*) as total')
+            ->selectRaw('CAST(strftime(\'%m\', created_at) AS INTEGER) as month, count(*) as total')
             ->groupBy('month')
             ->get()
             ->pluck('total', 'month')
